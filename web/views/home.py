@@ -26,6 +26,8 @@ def index(request, *args, **kwargs):
     page_obj = Pagination(request.GET.get('p'),data_count)
     article_list = models.Article.objects.filter(**kwargs).order_by('-nid')[page_obj.start:page_obj.end]
     page_str = page_obj.page_str(base_url)
+    top7 = models.Article.objects.order_by('comment_count')[:7]
+    print(top7)
     return render(
         request,
         'index.html',
@@ -34,6 +36,7 @@ def index(request, *args, **kwargs):
             'article_type_id': article_type_id,
             'article_type_list': article_type_list,
             'page_str': page_str,
+            'top7': top7,
         }
     )
 
@@ -133,6 +136,11 @@ def detail(request, site, nid):
         date_list = models.Article.objects.raw('select nid, count(nid) as num,strftime("%Y-%m",create_time) as ctime from repository_article group by strftime("%Y-%m",create_time)')
         article = models.Article.objects.filter(blog=blog, nid=nid).select_related('category', 'articledetail').first()
         comment_list = models.Comment.objects.filter(article=article).select_related('reply').all()
+
+        try:
+            user_id = request.session.get('user_info').get('nid')
+        except:
+            user_id = ''
         return render(
             request,
             'home_detail.html',
@@ -144,7 +152,7 @@ def detail(request, site, nid):
                 'category_list': category_list,
                 'date_list': date_list,
                 'article_id': nid,
-                'user_id': request.session.get('user_info').get('nid'),
+                'user_id': user_id,
             }
 
         )
@@ -153,11 +161,21 @@ def detail(request, site, nid):
         # print(request.POST)
         data['content'] = request.POST.get('content')
         data['article_id'] = request.POST.get('article')
-        data['user_id'] = request.POST.get('user')
+        try:
+            user_id = request.session.get('user_info').get('nid')
+            data['user_id'] = user_id
+        except:
+            return HttpResponse('nologin')
         if request.POST.get('reply'):
             data['reply_id'] = request.POST.get('reply')
         # print(data)
+        # print(data)
+        from django.db.models import F
+        # models.Tb1.objects.update(num=F('num')+1)
         models.Comment.objects.create(**data)
+        # sql = 'update repository_article set comment_count=2 where nid = {}'.format(request.POST.get('article'))
+        # print(sql)
+        models.Article.objects.filter(nid=data['article_id']).update(comment_count=F('comment_count')+1)
         return HttpResponse('ok')
 
 

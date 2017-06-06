@@ -107,7 +107,7 @@
 
             <div class="replay-comment-user"></div>
             <div class="reply-area" style="position: relative;">
-                {% if not request.user %}
+                {% if not request.session.user_info.nid %}
                 <div style="text-align:center;line-height:200px;position: absolute;top:0;left:0;right:0;bottom: 0;background-color: rgba(255,255,255,.6)">
                     您需要登录后才可以回帖 <a href="/login.html">登录</a> | <a href="/register.html">立即注册</a>
                 </div>

@@ -35,7 +35,6 @@ class ArticleForm(django_forms.Form):
     def __init__(self, request, *args, **kwargs):
         super(ArticleForm, self).__init__(*args, **kwargs)
         blog_id = request.session['user_info']['blog__nid']
-        self.fields['category_id'].choices = models.Category.objects.filter(blog_id=blog_id).values_list('nid',
-                                                                                                         'title')
+        self.fields['category_id'].choices = models.Category.objects.filter(blog_id=blog_id).values_list('nid', 'title')
         self.fields['tags'].choices = models.Tag.objects.filter(blog_id=blog_id).values_list('nid', 'title')
 
